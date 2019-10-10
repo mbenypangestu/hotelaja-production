@@ -1,62 +1,29 @@
-version: "3.7"
+version: "3"
 
 volumes:
-  dbdata:
+  mongodata:
 
 services:
   crawler:
-    container_name: wikihotel-crawler
-    image: nginx:stable-alpine
+    container_name: wikihotel-crawler-parser
+    build:
+      context: ./crawler-parser
+      dockerfile: Dockerfile
     ports:
-      - "${BACKEND_PORT}:80"
+      - "8080:3000"
     volumes:
-      - "./config/nginx:/etc/nginx/conf.d"
-      - "./log/nginx:/var/log/nginx"
-    depends_on:
-      - backend
-    links:
-      - backend
-    restart: always
-
-  database:
-    container_name: oee-nabati-database
-    image: mariadb:latest
-    volumes:
-      - "./config/mysql:/etc/mysql/conf.d"
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
     environment:
-      - MYSQL_HOST=localhost
-      - MYSQL_PORT=3306
-      - MYSQL_ROOT_HOST=%
-      - MYSQL_USER=${DB_USER}
-      - MYSQL_PASSWORD=${DB_PASSWORD}
-      - MYSQL_DATABASE=${DB_NAME}
-      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
-      - TZ=${TZ}
-    restart: always
-
-  adminer:
-    image: adminer
+      - DB_URL=mongodb://wikihotel_data
     depends_on:
       - database
     restart: always
-    ports:
-      - "${ADMINER_PORT}:8080"
 
-  api:
-    build:
-      context: ./apiserver
-      dockerfile: dev.dockerfile
-    working_dir: /var/www
+  database:
+    container_name: wikihotel-database
+    image: mongo
     volumes:
-      - ./apiserver:/var/www
-    restart: always
-
-  web:
-    build:
-      context: ./
-      dockerfile: nginx-server.dockerfile
-    working_dir: /var/www
-    # volumes_from:
-    #   - api
+      - mongodata:/data/db
     ports:
-      - 8080:80
+      - "27018:27017"
