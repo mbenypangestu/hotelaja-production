@@ -1,0 +1,3 @@
+[submodule "crawler-parser"]
+	path = crawler-parser
+	url = https://github.com/mygetzu/tripadvisor-crawler-apify-parser.git
